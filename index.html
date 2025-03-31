@@ -36,16 +36,6 @@
             transition: filter 0.3s ease; /* Smooth transition for theme changes */
         }
 
-        #map:-webkit-full-screen {
-            width: 100%;
-            height: 100%;
-        }
-
-        #map:fullscreen {
-            width: 100%;
-            height: 100%;
-        }
-
         [data-theme="dark"] #map {
             filter: brightness(1.2) contrast(0.83); /* Darken blacks and lighten whites */
         }
@@ -545,23 +535,16 @@
     </script>
     <script>
         document.getElementById("fullscreen-button").addEventListener("click", () => {
-            const mapElement = document.getElementById("map");
-            if (!mapElement.classList.contains("fullscreen")) {
-                mapElement.classList.add("fullscreen");
-                mapElement.style.position = "fixed";
-                mapElement.style.top = "0";
-                mapElement.style.left = "0";
-                mapElement.style.width = "100%";
-                mapElement.style.height = "100%";
-                mapElement.style.zIndex = "9999";
+            if (!document.fullscreenElement) {
+                // Enter fullscreen mode
+                document.documentElement.requestFullscreen().catch((err) => {
+                    console.error(`Error attempting to enable fullscreen mode: ${err.message}`);
+                });
             } else {
-                mapElement.classList.remove("fullscreen");
-                mapElement.style.position = "";
-                mapElement.style.top = "";
-                mapElement.style.left = "";
-                mapElement.style.width = "";
-                mapElement.style.height = "";
-                mapElement.style.zIndex = "";
+                // Exit fullscreen mode
+                document.exitFullscreen().catch((err) => {
+                    console.error(`Error attempting to exit fullscreen mode: ${err.message}`);
+                });
             }
         });
     </script>
