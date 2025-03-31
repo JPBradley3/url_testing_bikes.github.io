@@ -127,6 +127,9 @@
             display: inline-block;
             width: 50px;
             height: 24px;
+            background-color: transparent; /* Ensure the parent container is transparent */
+            border: none; /* Remove any border */
+            box-shadow: none; /* Remove any shadow */
         }
 
         .switch input {
@@ -142,30 +145,46 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #808080; /* Grayscale background */
+            background-color: transparent; /* Fully transparent background */
             transition: 0.4s;
             border-radius: 24px;
+            border: none; /* Remove the border */
+            box-shadow: none; /* Ensure no shadow is applied */
         }
 
         .slider:before {
             position: absolute;
             content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: #d3d3d3; /* Light gray toggle knob */
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background-color: var(--label-color); /* Knob color */
             transition: 0.4s;
             border-radius: 50%;
+            box-shadow: none; /* Remove shadow from the knob */
         }
 
         input:checked + .slider {
-            background-color: #a0a0a0; /* Lighter grayscale when toggled */
+            background-color: transparent; /* Ensure background remains transparent when toggled */
+            border: none; /* Remove any border when toggled */
+            box-shadow: none; /* Remove any shadow when toggled */
         }
 
         input:checked + .slider:before {
-            background-color: #f0f0f0; /* Even lighter gray for the knob when toggled */
-            transform: translateX(26px);
+            background-color: var(--hover-color); /* Change knob color when toggled */
+            transform: translateX(26px); /* Move the knob to the right */
+        }
+
+        /* Apply grayscale to all buttons */
+        button, .switch {
+            filter: grayscale(100%); /* Make buttons and switches grayscale */
+            transition: filter 0.3s ease; /* Smooth transition for hover effects */
+        }
+
+        /* Remove grayscale on hover */
+        button:hover, .switch:hover {
+            filter: grayscale(0%); /* Restore color on hover */
         }
 
         #neighborhood-title {
