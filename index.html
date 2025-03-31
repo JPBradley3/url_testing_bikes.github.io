@@ -232,6 +232,7 @@
     </div>
     <div id="map" style="display: none;"></div>
     <button id="start-button">Start Tracking</button>
+    <button id="fullscreen-button">Go Fullscreen</button>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -585,6 +586,24 @@
         }
 
         document.getElementById("start-button").addEventListener("click", startTracking);
+
+        document.getElementById("fullscreen-button").addEventListener("click", () => {
+            const element = document.documentElement; // Fullscreen the entire page
+
+            if (element.requestFullscreen) {
+                element.requestFullscreen();
+            } else if (element.webkitRequestFullscreen) { // For Safari
+                element.webkitRequestFullscreen();
+            } else if (element.msRequestFullscreen) { // For older IE/Edge
+                element.msRequestFullscreen();
+            }
+        });
+
+        document.addEventListener("fullscreenchange", () => {
+            if (!document.fullscreenElement) {
+                console.log("Exited fullscreen mode");
+            }
+        });
     </script>
 </body>
 </html>
