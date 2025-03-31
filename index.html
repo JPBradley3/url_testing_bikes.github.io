@@ -15,14 +15,14 @@
         }
 
         [data-theme="dark"] {
-            --bg-color: rgba(50, 50, 50, 0.75); /* Slightly more transparent dark background for dark mode */
-            --text-color: #b0b0b0; /* Dimmer white text */
-            --label-color: #909090; /* Dimmer label color */
-            --border-color: #666666; /* Dimmer border color */
-            --hover-color: #4a8bb5; /* Dimmer hover color */
+            --bg-color: transparent; /* Ensure the dark theme background is transparent */
+            background-color: transparent; /* Make the entire page background transparent */
+            color: var(--text-color); /* Ensure text color matches the dark theme */
         }
 
         html, body {
+            background-color: transparent; /* Fully transparent background */
+            color: var(--text-color); /* Use the theme's text color */
             margin: 0;
             padding: 0;
             height: 100%;
@@ -44,6 +44,7 @@
 
         body {
             font-size: 1rem; /* Default font size */
+            background-color: var(--bg-color); /* Use the theme's background color */
         }
 
         @media (max-width: 600px) {
@@ -57,6 +58,10 @@
             height: 100vh; /* Full height of the viewport */
             margin: 0;
             padding: 0;
+            position: absolute; /* Ensure the map is positioned behind other elements */
+            top: 0;
+            left: 0;
+            z-index: 0; /* Place the map behind other elements */
         }
 
         [data-theme="dark"] #map {
@@ -72,11 +77,11 @@
             bottom: 15px;
             left: 50%;
             transform: translateX(-50%);
-            background: var(--bg-color);
+            background: var(--bg-color); /* Keep the card background */
             padding: 10px 20px;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
+            z-index: 1000; /* Ensure the card is above the map */
             min-width: 240px;
             max-width: 90%; /* Prevent the info panel from being too wide */
             backdrop-filter: blur(5px);
@@ -98,8 +103,8 @@
             flex-direction: column; /* Stack label above the toggle */
             align-items: center; /* Center align the label and toggle */
             position: absolute;
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.8); /* Semi-transparent background for buttons */
+            z-index: 1000; /* Ensure these elements are above the map */
+            background: transparent; /* Fully transparent background */
             border-radius: 8px;
             padding: 5px;
         }
@@ -118,18 +123,20 @@
         #fullscreen-label {
             margin-bottom: 5px; /* Add spacing between the label and toggle */
             font-size: 0.9em; /* Slightly smaller font size */
-            color: var(--text-color); /* Use the theme's text color */
+            color: #666; /* Grayscale text color */
             text-align: center;
+            transition: color 0.3s ease;
         }
 
         .switch {
             position: relative;
             display: inline-block;
-            width: 50px;
-            height: 24px;
-            background-color: transparent; /* Ensure the parent container is transparent */
-            border: none; /* Remove any border */
-            box-shadow: none; /* Remove any shadow */
+            width: 50px; /* Width of the toggle */
+            height: 30px; /* Height of the toggle */
+            background-color: #ccc; /* Light gray background for the toggle */
+            border-radius: 15px; /* Rounded rectangle */
+            transition: background-color 0.3s ease;
+            cursor: pointer;
         }
 
         .switch input {
@@ -140,51 +147,22 @@
 
         .slider {
             position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: transparent; /* Fully transparent background */
-            transition: 0.4s;
-            border-radius: 24px;
-            border: none; /* Remove the border */
-            box-shadow: none; /* Ensure no shadow is applied */
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            left: 2px;
-            bottom: 2px;
-            background-color: var(--label-color); /* Knob color */
-            transition: 0.4s;
-            border-radius: 50%;
-            box-shadow: none; /* Remove shadow from the knob */
+            top: 3px; /* Center the square vertically */
+            left: 3px; /* Initial position of the square */
+            width: 24px; /* Width of the square */
+            height: 24px; /* Height of the square */
+            background-color: #666; /* Dark gray color for the slider */
+            border-radius: 8px; /* Rounded square */
+            transition: transform 0.3s ease, background-color 0.3s ease;
         }
 
         input:checked + .slider {
-            background-color: transparent; /* Ensure background remains transparent when toggled */
-            border: none; /* Remove any border when toggled */
-            box-shadow: none; /* Remove any shadow when toggled */
+            transform: translateX(20px); /* Move the square to the right when toggled */
+            background-color: #333; /* Darker gray for the slider when toggled */
         }
 
-        input:checked + .slider:before {
-            background-color: var(--hover-color); /* Change knob color when toggled */
-            transform: translateX(26px); /* Move the knob to the right */
-        }
-
-        /* Apply grayscale to all buttons */
-        button, .switch {
-            filter: grayscale(100%); /* Make buttons and switches grayscale */
-            transition: filter 0.3s ease; /* Smooth transition for hover effects */
-        }
-
-        /* Remove grayscale on hover */
-        button:hover, .switch:hover {
-            filter: grayscale(0%); /* Restore color on hover */
+        .switch:hover {
+            background-color: #bbb; /* Slightly darker gray on hover */
         }
 
         #neighborhood-title {
@@ -557,7 +535,6 @@
                 navigator.geolocation.getCurrentPosition(
                     updateLocation,
                     (error) => {
-                        console.warn("Retry failed. Falling back to network-based location.");
                         if (retryCount >= maxRetries) {
                             fallbackToNetworkLocation();
                         } else {
