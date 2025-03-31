@@ -354,11 +354,21 @@
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
 
+            // Update the map and marker position
             if (window.map && window.marker) {
                 window.map.setView([lat, lon], 19);
                 window.marker.setLatLng([lat, lon]);
             }
 
+            // Use GPS speed if available
+            if (position.coords.speed !== null) {
+                currentSpeed = position.coords.speed * 2.23694; // Convert m/s to mph
+            }
+
+            // Display the updated speed
+            document.getElementById("speed").textContent = currentSpeed.toFixed(1);
+
+            // Fetch the nearest intersection
             debounce(() => fetchNearestIntersection(lat, lon), 2000);
         }
 
@@ -368,30 +378,28 @@
         }
 
         function handleDeviceMotion(event) {
+            if (navigator.geolocation && currentSpeed > 0) {
+                // If GPS speed is available, prioritize it
+                return;
+            }
+
             const acceleration = event.accelerationIncludingGravity;
             const currentTime = Date.now();
             const deltaTime = (currentTime - lastAccelerationTime) / 1000; // Time in seconds
 
             if (deltaTime > 0) {
-                // Calculate the change in acceleration
                 const deltaX = acceleration.x - lastAcceleration.x;
                 const deltaY = acceleration.y - lastAcceleration.y;
                 const deltaZ = acceleration.z - lastAcceleration.z;
 
-                // Calculate the magnitude of the acceleration vector
                 const accelerationMagnitude = Math.sqrt(deltaX ** 2 + deltaY ** 2 + deltaZ ** 2);
 
-                // Update the speed (v = u + at, where u is the initial speed, a is acceleration, t is time)
                 currentSpeed += accelerationMagnitude * deltaTime * 2.23694; // Convert m/s to mph
-
-                // Prevent negative speed
                 currentSpeed = Math.max(0, currentSpeed);
 
-                // Update the last acceleration and time
                 lastAcceleration = { x: acceleration.x, y: acceleration.y, z: acceleration.z };
                 lastAccelerationTime = currentTime;
 
-                // Display the updated speed
                 document.getElementById("speed").textContent = currentSpeed.toFixed(1);
             }
         }
