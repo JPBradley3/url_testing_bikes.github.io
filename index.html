@@ -546,23 +546,22 @@
     <script>
         document.getElementById("fullscreen-button").addEventListener("click", () => {
             const mapElement = document.getElementById("map");
-
-            if (document.fullscreenElement || document.webkitFullscreenElement) {
-                // Exit fullscreen
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen(); // For Safari
-                }
+            if (!mapElement.classList.contains("fullscreen")) {
+                mapElement.classList.add("fullscreen");
+                mapElement.style.position = "fixed";
+                mapElement.style.top = "0";
+                mapElement.style.left = "0";
+                mapElement.style.width = "100%";
+                mapElement.style.height = "100%";
+                mapElement.style.zIndex = "9999";
             } else {
-                // Enter fullscreen
-                if (mapElement.requestFullscreen) {
-                    mapElement.requestFullscreen();
-                } else if (mapElement.webkitRequestFullscreen) {
-                    mapElement.webkitRequestFullscreen(); // For Safari
-                } else {
-                    alert("Fullscreen mode is not supported on this device.");
-                }
+                mapElement.classList.remove("fullscreen");
+                mapElement.style.position = "";
+                mapElement.style.top = "";
+                mapElement.style.left = "";
+                mapElement.style.width = "";
+                mapElement.style.height = "";
+                mapElement.style.zIndex = "";
             }
         });
     </script>
