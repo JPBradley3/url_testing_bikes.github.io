@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Bicycle Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
@@ -27,6 +27,10 @@
             padding: 0;
             height: 100%;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-top: env(safe-area-inset-top);
+            padding-right: env(safe-area-inset-right);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
         }
 
         #map {
@@ -34,6 +38,10 @@
             height: 100vh;
             z-index: 1;
             transition: filter 0.3s ease; /* Smooth transition for theme changes */
+            padding-top: env(safe-area-inset-top);
+            padding-right: env(safe-area-inset-right);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
         }
 
         [data-theme="dark"] #map {
@@ -59,8 +67,6 @@
         /* Default position for portrait mode (bottom center) */
         #info {
             bottom: 15px;
-            left: 50%;
-            transform: translateX(-50%);
         }
 
         /* Landscape mode: position at the bottom left */
@@ -241,7 +247,7 @@
 </head>
 <body>
     <button id="start-button">Start Tracking</button>
-    <div id="map" style="width: 100%; height: 100vh;"></div>
+    <div id="map" style="width: 100%; height: 100vh; display: none;"></div>
     <div id="info" style="display: none;">
         <h1 id="neighborhood-title">Loading Area...</h1>
         <div class="data-container">
@@ -307,16 +313,16 @@
         });
 
         document.getElementById("start-button").addEventListener("click", () => {
-            document.getElementById("start-button").style.display = "none";
-            document.getElementById("map").style.display = "block";
-            document.getElementById("info").style.display = "block";
+            document.getElementById("start-button").style.display = "none"; // Hide the button
+            document.getElementById("map").style.display = "block"; // Show the map
+            document.getElementById("info").style.display = "block"; // Show the info panel
 
-            loadMap();
-            startTracking();
+            loadMap(); // Initialize the map
+            startTracking(); // Start location tracking
         });
 
         function loadMap() {
-            if (isMapInitialized) return;
+            if (isMapInitialized) return; // Prevent reinitializing the map
 
             window.map = L.map('map', { zoomControl: false, attributionControl: false });
             window.tileLayers = {
@@ -487,13 +493,9 @@
 
         function startTracking() {
             if (navigator.geolocation) {
-                // Try high-accuracy GPS first
                 navigator.geolocation.watchPosition(
                     updateLocation,
-                    (error) => {
-                        console.warn("High-accuracy GPS failed. Falling back to network-based location.");
-                        retryGPSConnection(); // Retry GPS connection
-                    },
+                    handleLocationError,
                     geoOptionsHighAccuracy
                 );
             } else {
@@ -580,7 +582,7 @@
         fullscreenToggle.addEventListener("change", () => {
             if (fullscreenToggle.checked) {
                 // Enter fullscreen mode
-                document.documentElement.requestFullscreen().then(() => {
+                document.documentElement.requestFullscreen({ navigationUI: "hide" }).then(() => {
                     fullscreenLabel.textContent = "Exit Fullscreen"; // Update label
                 }).catch((err) => {
                     console.error(`Error attempting to enable fullscreen mode: ${err.message}`);
