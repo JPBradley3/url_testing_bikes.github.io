@@ -36,6 +36,16 @@
             transition: filter 0.3s ease; /* Smooth transition for theme changes */
         }
 
+        #map:-webkit-full-screen {
+            width: 100%;
+            height: 100%;
+        }
+
+        #map:fullscreen {
+            width: 100%;
+            height: 100%;
+        }
+
         [data-theme="dark"] #map {
             filter: brightness(1.2) contrast(0.83); /* Darken blacks and lighten whites */
         }
@@ -535,16 +545,24 @@
     </script>
     <script>
         document.getElementById("fullscreen-button").addEventListener("click", () => {
-            if (!document.fullscreenElement) {
-                // Enter fullscreen mode
-                document.documentElement.requestFullscreen().catch((err) => {
-                    console.error(`Error attempting to enable fullscreen mode: ${err.message}`);
-                });
+            const mapElement = document.getElementById("map");
+
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen(); // For Safari
+                }
             } else {
-                // Exit fullscreen mode
-                document.exitFullscreen().catch((err) => {
-                    console.error(`Error attempting to exit fullscreen mode: ${err.message}`);
-                });
+                // Enter fullscreen
+                if (mapElement.requestFullscreen) {
+                    mapElement.requestFullscreen();
+                } else if (mapElement.webkitRequestFullscreen) {
+                    mapElement.webkitRequestFullscreen(); // For Safari
+                } else {
+                    alert("Fullscreen mode is not supported on this device.");
+                }
             }
         });
     </script>
