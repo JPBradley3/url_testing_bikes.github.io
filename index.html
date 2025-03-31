@@ -72,11 +72,31 @@
             }
         }
 
-        #theme-toggle-container {
+        #theme-toggle-container,
+        #fullscreen-toggle-container {
+            display: flex;
+            flex-direction: column; /* Stack label above the toggle */
+            align-items: center; /* Center align the label and toggle */
             position: absolute;
-            top: 10px;
-            right: 10px;
             z-index: 1000;
+        }
+
+        #theme-toggle-container {
+            top: 10px;
+            right: 10px; /* Position theme toggle in the top-right corner */
+        }
+
+        #fullscreen-toggle-container {
+            top: 10px;
+            left: 10px; /* Position fullscreen toggle in the top-left corner */
+        }
+
+        #theme-label,
+        #fullscreen-label {
+            margin-bottom: 5px; /* Add spacing between the label and toggle */
+            font-size: 0.9em; /* Slightly smaller font size */
+            color: var(--text-color); /* Use the theme's text color */
+            text-align: center;
         }
 
         .switch {
@@ -217,38 +237,6 @@
                 font-size: 1em; /* Smaller title font size */
             }
         }
-
-        #fullscreen-button {
-            position: absolute;
-            top: 20px; /* Move to the top */
-            left: 20px; /* Move to the left */
-            width: 50px;
-            height: 50px;
-            background-color: #808080; /* Grayscale background */
-            border: none;
-            border-radius: 12px; /* Rounded square shape */
-            cursor: pointer;
-            z-index: 1001;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-        }
-
-        #fullscreen-button i {
-            color: white; /* White icon */
-            font-size: 1.5em;
-        }
-
-        #fullscreen-button:hover {
-            background-color: #a0a0a0; /* Lighter grayscale on hover */
-            transform: scale(1.1); /* Slight zoom effect */
-        }
-
-        #fullscreen-button:active {
-            transform: scale(0.95); /* Slight shrink effect on click */
-        }
     </style>
 </head>
 <body>
@@ -269,14 +257,19 @@
         </div>
     </div>
     <div id="theme-toggle-container">
+        <span id="theme-label">Theme</span> <!-- Label above the toggle -->
         <label class="switch">
             <input type="checkbox" id="theme-toggle">
             <span class="slider"></span>
         </label>
     </div>
-    <button id="fullscreen-button">
-        <i class="fas fa-expand"></i>
-    </button>
+    <div id="fullscreen-toggle-container">
+        <span id="fullscreen-label">Fullscreen</span> <!-- Label above the toggle -->
+        <label class="switch">
+            <input type="checkbox" id="fullscreen-toggle">
+            <span class="slider"></span>
+        </label>
+    </div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -319,18 +312,7 @@
             document.getElementById("info").style.display = "block";
 
             loadMap();
-
-            const geoOptions = {
-                enableHighAccuracy: true,
-                maximumAge: 0,
-                timeout: 10000
-            };
-
-            if (navigator.geolocation) {
-                navigator.geolocation.watchPosition(updateLocation, showError, geoOptions);
-            } else {
-                alert("Geolocation is not supported by your browser.");
-            }
+            startTracking();
         });
 
         function loadMap() {
@@ -348,60 +330,6 @@
             window.marker = L.marker([0, 0], { icon: blueIcon }).addTo(window.map);
 
             isMapInitialized = true;
-        }
-
-        function updateLocation(position) {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-
-            // Update the map and marker position
-            if (window.map && window.marker) {
-                window.map.setView([lat, lon], 19);
-                window.marker.setLatLng([lat, lon]);
-            }
-
-            // Use GPS speed if available
-            if (position.coords.speed !== null) {
-                currentSpeed = position.coords.speed * 2.23694; // Convert m/s to mph
-            }
-
-            // Display the updated speed
-            document.getElementById("speed").textContent = currentSpeed.toFixed(1);
-
-            // Fetch the nearest intersection
-            debounce(() => fetchNearestIntersection(lat, lon), 2000);
-        }
-
-        function showError(error) {
-            console.error("Error getting location:", error.message);
-            alert("Unable to retrieve your location. Please check your GPS settings.");
-        }
-
-        function handleDeviceMotion(event) {
-            if (navigator.geolocation && currentSpeed > 0) {
-                // If GPS speed is available, prioritize it
-                return;
-            }
-
-            const acceleration = event.accelerationIncludingGravity;
-            const currentTime = Date.now();
-            const deltaTime = (currentTime - lastAccelerationTime) / 1000; // Time in seconds
-
-            if (deltaTime > 0) {
-                const deltaX = acceleration.x - lastAcceleration.x;
-                const deltaY = acceleration.y - lastAcceleration.y;
-                const deltaZ = acceleration.z - lastAcceleration.z;
-
-                const accelerationMagnitude = Math.sqrt(deltaX ** 2 + deltaY ** 2 + deltaZ ** 2);
-
-                currentSpeed += accelerationMagnitude * deltaTime * 2.23694; // Convert m/s to mph
-                currentSpeed = Math.max(0, currentSpeed);
-
-                lastAcceleration = { x: acceleration.x, y: acceleration.y, z: acceleration.z };
-                lastAccelerationTime = currentTime;
-
-                document.getElementById("speed").textContent = currentSpeed.toFixed(1);
-            }
         }
 
         async function processRequestQueue() {
@@ -542,16 +470,130 @@
         }
     </script>
     <script>
-        document.getElementById("fullscreen-button").addEventListener("click", () => {
-            if (!document.fullscreenElement) {
+        const geoOptionsHighAccuracy = {
+            enableHighAccuracy: true, // Use GPS for high accuracy
+            timeout: 10000,           // Wait up to 10 seconds
+            maximumAge: 0             // Do not use cached location
+        };
+
+        const geoOptionsFallback = {
+            enableHighAccuracy: false, // Use Wi-Fi and cellular for lower accuracy
+            timeout: 10000,
+            maximumAge: 0
+        };
+
+        let retryCount = 0; // Track the number of retries
+        const maxRetries = 3; // Maximum number of retries
+
+        function startTracking() {
+            if (navigator.geolocation) {
+                // Try high-accuracy GPS first
+                navigator.geolocation.watchPosition(
+                    updateLocation,
+                    (error) => {
+                        console.warn("High-accuracy GPS failed. Falling back to network-based location.");
+                        retryGPSConnection(); // Retry GPS connection
+                    },
+                    geoOptionsHighAccuracy
+                );
+            } else {
+                alert("Geolocation is not supported by your browser.");
+            }
+        }
+
+        function retryGPSConnection() {
+            if (retryCount < maxRetries) {
+                retryCount++;
+                console.log(`Retrying GPS connection (${retryCount}/${maxRetries})...`);
+                navigator.geolocation.getCurrentPosition(
+                    updateLocation,
+                    (error) => {
+                        console.warn("Retry failed. Falling back to network-based location.");
+                        if (retryCount >= maxRetries) {
+                            fallbackToNetworkLocation();
+                        } else {
+                            retryGPSConnection(); // Retry again
+                        }
+                    },
+                    geoOptionsHighAccuracy
+                );
+            } else {
+                fallbackToNetworkLocation();
+            }
+        }
+
+        function fallbackToNetworkLocation() {
+            console.warn("Switching to network-based location.");
+            navigator.geolocation.watchPosition(
+                updateLocation,
+                handleLocationError,
+                geoOptionsFallback
+            );
+        }
+
+        function updateLocation(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+
+            // Reset retry count on successful location retrieval
+            retryCount = 0;
+
+            // Update the map and marker position
+            if (window.map && window.marker) {
+                window.map.setView([lat, lon], 19);
+                window.marker.setLatLng([lat, lon]);
+            }
+
+            // Use GPS speed if available
+            if (position.coords.speed !== null) {
+                currentSpeed = position.coords.speed * 2.23694; // Convert m/s to mph
+            }
+
+            // Display the updated speed
+            document.getElementById("speed").textContent = currentSpeed.toFixed(1);
+
+            // Fetch the nearest intersection
+            debounce(() => fetchNearestIntersection(lat, lon), 2000);
+        }
+
+        function handleLocationError(error) {
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    alert("Location permission denied. Please enable GPS.");
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    alert("Location unavailable. Please check your GPS or network settings.");
+                    break;
+                case error.TIMEOUT:
+                    alert("Location request timed out. Retrying...");
+                    retryGPSConnection(); // Retry GPS connection on timeout
+                    break;
+                default:
+                    alert("An unknown error occurred while retrieving location.");
+                    break;
+            }
+        }
+    </script>
+    <script>
+        const fullscreenToggle = document.getElementById("fullscreen-toggle");
+        const fullscreenLabel = document.getElementById("fullscreen-label");
+
+        fullscreenToggle.addEventListener("change", () => {
+            if (fullscreenToggle.checked) {
                 // Enter fullscreen mode
-                document.documentElement.requestFullscreen().catch((err) => {
+                document.documentElement.requestFullscreen().then(() => {
+                    fullscreenLabel.textContent = "Exit Fullscreen"; // Update label
+                }).catch((err) => {
                     console.error(`Error attempting to enable fullscreen mode: ${err.message}`);
+                    fullscreenToggle.checked = false; // Revert toggle if fullscreen fails
                 });
             } else {
                 // Exit fullscreen mode
-                document.exitFullscreen().catch((err) => {
+                document.exitFullscreen().then(() => {
+                    fullscreenLabel.textContent = "Fullscreen"; // Update label
+                }).catch((err) => {
                     console.error(`Error attempting to exit fullscreen mode: ${err.message}`);
+                    fullscreenToggle.checked = true; // Revert toggle if exiting fullscreen fails
                 });
             }
         });
