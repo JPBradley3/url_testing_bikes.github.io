@@ -241,7 +241,7 @@
 </head>
 <body>
     <button id="start-button">Start Tracking</button>
-    <div id="map"></div>
+    <div id="map" style="width: 100%; height: 100vh;"></div>
     <div id="info" style="display: none;">
         <h1 id="neighborhood-title">Loading Area...</h1>
         <div class="data-container">
@@ -471,14 +471,14 @@
     </script>
     <script>
         const geoOptionsHighAccuracy = {
-            enableHighAccuracy: true, // Use GPS for high accuracy
-            timeout: 10000,           // Wait up to 10 seconds
-            maximumAge: 0             // Do not use cached location
+            enableHighAccuracy: true,
+            timeout: 30000, // Increase timeout to 30 seconds
+            maximumAge: 0
         };
 
         const geoOptionsFallback = {
-            enableHighAccuracy: false, // Use Wi-Fi and cellular for lower accuracy
-            timeout: 10000,
+            enableHighAccuracy: false,
+            timeout: 30000, // Increase timeout to 30 seconds
             maximumAge: 0
         };
 
@@ -559,14 +559,13 @@
         function handleLocationError(error) {
             switch (error.code) {
                 case error.PERMISSION_DENIED:
-                    alert("Location permission denied. Please enable GPS.");
+                    alert("Location permission denied. Please enable GPS and allow location access.");
                     break;
                 case error.POSITION_UNAVAILABLE:
                     alert("Location unavailable. Please check your GPS or network settings.");
                     break;
                 case error.TIMEOUT:
-                    alert("Location request timed out. Retrying...");
-                    retryGPSConnection(); // Retry GPS connection on timeout
+                    alert("Location request timed out. Please try again.");
                     break;
                 default:
                     alert("An unknown error occurred while retrieving location.");
